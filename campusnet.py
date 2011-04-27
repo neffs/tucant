@@ -26,16 +26,17 @@ DEFAULT_CONFIG={"user":"","password":""}
 
 class CampusNetSession(object):
     """Manages a Campusnet Session"""
-    def __init__(self, base_url, user, password):
+    def __init__(self, base_url, campusnet_path, user, password):
         super(CampusNetSession, self).__init__()
-        self.base_url = base_url
+        self.server_url = server_url
+        self.campusnet_path = campusnet_path
         self.user = user
         self.password = password
         self.clino="000000000000001"
         self.login()
         
     def login(self):
-        """docstring for login"""
+        """Login to Campusnet, raises exception if credentials are wrong"""
         content = self.post_request("LOGINCHECK",(self.user,self.password,"000294","",""))
         clino_match = re.search(r"<input name=\"clino\".*value=\"(\d+)\"",content)
         clino=clino_match.group(1)
@@ -44,7 +45,13 @@ class CampusNetSession(object):
         self.clino=clino
             
     def post_request(self, prgname, arguments):
-        """docstring for post_request"""
+        """
+        Sends a Request to Campusnet
+        prgname is the module name
+        arguments is a list of arguments, just like in the path of campusnet links
+        the first argument is always the session id which is added by this function
+        
+        """
         argcount = 0
         data = []
         for a in arguments:
@@ -53,8 +60,6 @@ class CampusNetSession(object):
         data[0:0] = [("clino",self.clino)]
         argumentlist = ",".join([a[0] for a in data])
         data[0:0] = (("ARGUMENTS",argumentlist),("PRGNAME",prgname),("APPNAME",APPNAME))
-        print data
-        print urllib.urlencode(data)
         f = urllib2.urlopen(self.base_url,urllib.urlencode(data))
         return f.read()
     request = post_request
